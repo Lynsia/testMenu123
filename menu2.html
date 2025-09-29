@@ -32,15 +32,17 @@
             padding-left: env(safe-area-inset-left);
             padding-right: env(safe-area-inset-right);
             height: 100vh;
-            position: fixed;
             width: 100%;
+            position: relative;
         }
-        
-        /* 页面容器 */
+
+        /* 确保可滚动区域可以正常滚动 */
         .page-container {
             position: relative;
             width: 100%;
             min-height: 100vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
         
         /* 页面基础样式 */
@@ -831,7 +833,8 @@
     </div>
 
     <script>
-        function initializeFullscreen() {
+         // 全屏功能实现 - 修复版
+    function initializeFullscreen() {
         // 添加必要的meta标签
         const viewportMeta = document.querySelector('meta[name="viewport"]');
         if (viewportMeta) {
@@ -865,18 +868,19 @@
             setTimeout(attemptFullscreen, 100);
         }, { once: true });
         
-        // 防止缩放和滚动到地址栏
+        // 只防止缩放，不阻止滚动
         document.addEventListener('touchmove', function(e) {
-            if (e.scale !== 1) {
+            // 只有当检测到缩放时才阻止默认行为
+            if (e.touches && e.touches.length > 1) {
                 e.preventDefault();
             }
         }, { passive: false });
         
-        // 禁用双击缩放
+        // 禁用双击缩放，但不影响滚动
         let lastTouchEnd = 0;
         document.addEventListener('touchend', function(e) {
             const now = Date.now();
-            if (now - lastTouchEnd <= 300) {
+            if (now - lastTouchEnd <= 300 && e.touches.length === 0) {
                 e.preventDefault();
             }
             lastTouchEnd = now;
@@ -886,10 +890,26 @@
         window.addEventListener('load', function() {
             setTimeout(() => {
                 window.scrollTo(0, 0);
+                // 额外的技巧：强制隐藏地址栏
+                setTimeout(() => {
+                    window.scrollTo(0, 1);
+                    setTimeout(() => {
+                        window.scrollTo(0, 0);
+                    }, 10);
+                }, 100);
             }, 100);
         });
+
+        // 额外的滚动技巧来隐藏地址栏
+        function hideAddressBar() {
+            if (window.scrollY === 0) {
+                window.scrollTo(0, 1);
+            }
+        }
+        
+        window.addEventListener('load', hideAddressBar);
+        window.addEventListener('orientationchange', hideAddressBar);
     }
-    // 全屏功能实现 - 新增代码结束
 
         // 完整的菜单数据 - 恢复原来的数据
         const menuData = {
