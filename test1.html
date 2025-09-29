@@ -1,0 +1,1721 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>南风茶舍 - 电子菜单</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#8b6d56',
+                        secondary: '#a8927a',
+                        accent: '#745b48',
+                        background: '#f8f5f0',
+                        text: '#4a3d33',
+                    },
+                    fontFamily: {
+                        sans: ['"Noto Sans SC"', 'sans-serif'],
+                        serif: ['"Noto Serif SC"', 'serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        /* 基础样式 */
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: #f8f5f0;
+            color: #4a3d33;
+            font-family: "Noto Serif SC", "Noto Sans SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            min-height: 100vh;
+            width: 100%;
+        }
+        
+        /* 页面容器 */
+        .page-container {
+            position: relative;
+            width: 100%;
+            min-height: 100vh;
+        }
+        
+        /* 页面基础样式 */
+        .page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            min-height: 100vh;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out, visibility 0.6s;
+            z-index: 0;
+        }
+        
+        /* 激活页面样式 */
+        .page.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+            z-index: 10;
+        }
+        
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar {
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f0ece6;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #a8927a;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #8b6d56;
+        }
+        
+        /* 触摸优化 */
+        @media (hover: none) and (pointer: coarse) {
+            button:active {
+                opacity: 0.7;
+            }
+        }
+        
+        /* 确保iPad上的触摸交互更好 */
+        .touch-target {
+            touch-action: manipulation;
+        }
+        
+        /* 分类卡片样式 */
+        .category-card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: 1px solid #e9e1d6;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .category-card:hover {
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            transform: scale(1.02);
+        }
+        
+        .category-card:active {
+            transform: scale(0.98);
+        }
+        
+        /* 产品卡片样式 */
+        .product-card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: 1px solid #e9e1d6;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            cursor: pointer;
+        }
+        
+        .product-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* 按钮样式 */
+        .primary-button {
+            background-color: #8b6d56;
+            color: white;
+            padding: 0.75rem 2rem;
+            border-radius: 9999px;
+            font-size: 1.125rem;
+            border: 2px solid #745b48;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+        }
+        
+        .primary-button:hover {
+            background-color: #745b48;
+            transform: scale(1.05);
+        }
+        
+        .primary-button:active {
+            transform: scale(0.95);
+        }
+        
+        /* 返回按钮样式 */
+        .back-button {
+            background-color: #8b6d56;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 9999px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s;
+        }
+        
+        .back-button:hover {
+            background-color: #745b48;
+        }
+        
+        /* 轮播图样式 */
+        .banner-container {
+            position: relative;
+            overflow: hidden;
+            border-radius: 1rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            height: 16rem;
+            width: 100%;
+        }
+        
+        @media (min-width: 768px) {
+            .banner-container {
+                height: 20rem;
+            }
+        }
+        
+        .banner-slider {
+            display: flex;
+            transition: transform 0.7s ease-in-out;
+            height: 100%;
+        }
+        
+        .banner-slide {
+            min-width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        
+        .banner-control {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(0, 0, 0, 0.3);
+            color: white;
+            padding: 0.5rem;
+            border-radius: 9999px;
+            transition: all 0.3s;
+        }
+        
+        .banner-control:hover {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .banner-indicator {
+            width: 0.625rem;
+            height: 0.625rem;
+            border-radius: 9999px;
+            transition: all 0.3s;
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .banner-indicator.active {
+            width: 2rem;
+            background-color: white;
+        }
+        
+        /* 模态框样式 */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            animation: fadeIn 0.3s;
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            width: 100%;
+            max-width: 28rem;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: zoomIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes zoomIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        /* 网格布局 */
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1.5rem;
+            width: 100%;
+        }
+        
+        @media (min-width: 768px) {
+            .category-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            .category-grid {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+        }
+        
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(1, minmax(0, 1fr));
+            gap: 1.5rem;
+            width: 100%;
+        }
+        
+        @media (min-width: 640px) {
+            .product-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            .product-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+        
+        /* 快捷导航栏样式 */
+        .quick-nav-mobile {
+            background-color: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            overflow-x: auto;
+            white-space: nowrap;
+            padding: 0.5rem 1rem;
+            border-bottom: 1px solid #e9e1d6;
+            width: 100%;
+        }
+        
+        .quick-nav-desktop {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: 1px solid #e9e1d6;
+            width: 100%;
+        }
+        
+        .quick-nav-btn {
+            padding: 0.5rem 1rem;
+            margin: 0 0.25rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            transition: all 0.3s;
+            background-color: #f0ece6;
+            color: #8b6d56;
+        }
+        
+        .quick-nav-btn:hover {
+            background-color: #e9e1d6;
+        }
+        
+        .quick-nav-btn.active {
+            background-color: #8b6d56;
+            color: white;
+            font-weight: 500;
+        }
+        
+        .quick-nav-item {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 0.75rem 1rem;
+            text-align: left;
+            transition: all 0.3s;
+            color: #8b6d56;
+        }
+        
+        .quick-nav-item:hover {
+            background-color: #f0ece6;
+        }
+        
+        .quick-nav-item.active {
+            background-color: #8b6d56;
+            color: white;
+            font-weight: 500;
+        }
+        
+        /* 容器样式 - 修复iPad布局问题 */
+        .container {
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+        
+        @media (min-width: 640px) {
+            .container {
+                max-width: 640px;
+            }
+        }
+        
+        @media (min-width: 768px) {
+            .container {
+                max-width: 768px;
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            .container {
+                max-width: 1024px;
+            }
+        }
+        
+        @media (min-width: 1280px) {
+            .container {
+                max-width: 1280px;
+            }
+        }
+        
+        /* 内容居中样式 */
+        .content-center {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            text-align: center;
+        }
+        
+        /* 产品详情页布局修复 - 确保导航栏始终在左侧 */
+        .product-detail-layout {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+        
+        @media (min-width: 768px) {
+            .product-detail-layout {
+                flex-direction: row;
+            }
+        }
+        
+        /* 导航栏容器修复 - 确保在小屏幕上也在左侧 */
+        .quick-nav-wrapper {
+            width: 100%;
+            margin-bottom: 1.5rem;
+        }
+        
+        @media (min-width: 768px) {
+            .quick-nav-wrapper {
+                width: 16rem;
+                margin-right: 1.5rem;
+                margin-bottom: 0;
+                position: sticky;
+                top: 1.5rem;
+                align-self: flex-start;
+            }
+        }
+        
+        /* 开屏页修复 - 确保内容正确显示 */
+        #splash-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        .splash-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            z-index: 10;
+            width: 100%;
+            padding: 0 1rem;
+        }
+        
+        /* iPad 优化 */
+        @media screen and (min-width: 768px) and (max-width: 1024px) {
+            .banner-container {
+                height: 64vw;
+                max-height: 400px;
+            }
+            
+            .category-card .h-40 {
+                height: 150px;
+            }
+            
+            .quick-nav-wrapper {
+                width: 14rem;
+                margin-right: 1rem;
+            }
+            
+            .product-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+            
+            .modal-content {
+                max-width: 80vw;
+                max-height: 90vh;
+            }
+            
+            /* 修复iPad上分类网格布局 */
+            .category-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 1rem;
+            }
+        }
+        
+        /* 横屏iPad优化 */
+        @media screen and (min-width: 1024px) and (max-height: 768px) and (orientation: landscape) {
+            .banner-container {
+                height: 50vh;
+                max-height: 300px;
+            }
+            
+            .category-grid {
+                grid-template-columns: repeat(5, minmax(0, 1fr));
+                gap: 0.75rem;
+            }
+            
+            .product-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 0.75rem;
+            }
+        }
+        
+        /* 小屏幕iPad优化 */
+        @media screen and (max-width: 767px) {
+            .container {
+                padding-left: 0.5rem;
+                padding-right: 0.5rem;
+            }
+            
+            .category-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 0.75rem;
+            }
+            
+            .product-grid {
+                grid-template-columns: repeat(1, minmax(0, 1fr));
+                gap: 0.75rem;
+            }
+            
+            .banner-container {
+                height: 12rem;
+            }
+            
+            /* 小屏幕上导航栏也在左侧 */
+            .quick-nav-wrapper {
+                width: 100%;
+                margin-bottom: 1.5rem;
+            }
+            
+            @media (min-width: 640px) {
+                .product-detail-layout {
+                    flex-direction: row;
+                }
+                
+                .quick-nav-wrapper {
+                    width: 12rem;
+                    margin-right: 1rem;
+                    margin-bottom: 0;
+                }
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <!-- 开屏页 -->
+        <div id="splash-screen" class="page active w-full h-screen bg-cover bg-center cursor-pointer flex flex-col items-center justify-center relative overflow-hidden">
+            <style>
+                #splash-screen {
+                    background-image: url('https://space.coze.cn/api/coze_space/gen_image?image_size=landscape_16_9&prompt=traditional%20Chinese%20tea%20house%20interior%2C%20serene%20atmosphere%2C%20warm%20lighting&sign=8c38b0d93f29fcc2cd8c709dc3b46d0e');
+                }
+            </style>
+            <!-- 半透明遮罩 -->
+            <div class="absolute inset-0 bg-black bg-opacity-30"></div>
+            
+            <!-- 标题 -->
+            <div class="splash-content">
+                <h1 class="text-5xl md:text-7xl font-bold text-white mb-4">南风茶舍</h1>
+                <p class="text-xl md:text-2xl text-white opacity-90 mb-8">品味传统，享受生活</p>
+                
+                <!-- 进入菜单按钮 -->
+                <button id="enter-menu-btn" class="primary-button">
+                    进入菜单
+                </button>
+            </div>
+            
+            <!-- 底部提示 -->
+            <div class="absolute bottom-10 left-0 right-0 text-center text-white text-lg z-10 opacity-80">
+                <p>点击任意位置进入菜单</p>
+            </div>
+        </div>
+
+        <!-- 分类页面 -->
+        <div id="category-page" class="page min-h-screen bg-background text-text">
+            <!-- 返回首页按钮 -->
+            <div class="absolute top-4 left-4 z-10">
+                <button id="back-to-splash-btn" class="back-button">
+                    <i class="fa-solid fa-arrow-left text-xl"></i>
+                </button>
+            </div>
+
+            <!-- 主标题 -->
+            <div class="text-center py-6 content-center">
+                <h2 class="text-3xl font-bold text-primary">南风茶舍</h2>
+                <p class="text-accent mt-2">传统茶艺，现代享受</p>
+            </div>
+
+            <!-- 新品推荐Banner - 自动循环展示 -->
+            <div class="container mb-10">
+                <div class="banner-container">
+                    <div id="banner-slider" class="banner-slider">
+                        <!-- 轮播图内容会通过JS动态生成 -->
+                    </div>
+
+                    <!-- 轮播控制按钮 -->
+                    <button id="prev-banner" class="banner-control left-4">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <button id="next-banner" class="banner-control right-4">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+
+                    <!-- 轮播指示器 -->
+                    <div id="banner-indicators" class="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
+                        <!-- 指示器会通过JS动态生成 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 分类网格 -->
+            <div class="container pb-20">
+                <div class="category-grid">
+                    <!-- 冷萃茶饮 -->
+                    <div class="category-card" data-category-id="cold-brew">
+                        <div class="h-40 bg-[#f0ece6] flex items-center justify-center p-4">
+                            <i class="fa-solid fa-wine-bottle text-5xl text-primary"></i>
+                        </div>
+                        <div class="p-4 text-center">
+                            <h3 class="text-xl font-bold text-text">冷萃茶饮</h3>
+                            <p class="text-accent text-sm mt-1">2 种选择</p>
+                        </div>
+                    </div>
+
+                    <!-- 冰品类 -->
+                    <div class="category-card" data-category-id="ice">
+                        <div class="h-40 bg-[#f0ece6] flex items-center justify-center p-4">
+                            <i class="fa-solid fa-snowflake text-5xl text-primary"></i>
+                        </div>
+                        <div class="p-4 text-center">
+                            <h3 class="text-xl font-bold text-text">冰品类</h3>
+                            <p class="text-accent text-sm mt-1">5 种选择</p>
+                        </div>
+                    </div>
+
+                    <!-- 咖啡 -->
+                    <div class="category-card" data-category-id="coffee">
+                        <div class="h-40 bg-[#f0ece6] flex items-center justify-center p-4">
+                            <i class="fa-solid fa-coffee text-5xl text-primary"></i>
+                        </div>
+                        <div class="p-4 text-center">
+                            <h3 class="text-xl font-bold text-text">咖啡</h3>
+                            <p class="text-accent text-sm mt-1">3 种选择</p>
+                        </div>
+                    </div>
+
+                    <!-- 功夫茶 -->
+                    <div class="category-card" data-category-id="kungfu">
+                        <div class="h-40 bg-[#f0ece6] flex items-center justify-center p-4">
+                            <i class="fa-solid fa-teapot text-5xl text-primary"></i>
+                        </div>
+                        <div class="p-4 text-center">
+                            <h3 class="text-xl font-bold text-text">功夫茶</h3>
+                            <p class="text-accent text-sm mt-1">2 种选择</p>
+                        </div>
+                    </div>
+
+                    <!-- 绿茶 -->
+                    <div class="category-card" data-category-id="green">
+                        <div class="h-40 bg-[#f0ece6] flex items-center justify-center p-4">
+                            <i class="fa-solid fa-leaf text-5xl text-primary"></i>
+                        </div>
+                        <div class="p-4 text-center">
+                            <h3 class="text-xl font-bold text-text">绿茶</h3>
+                            <p class="text-accent text-sm mt-1">4 种选择</p>
+                        </div>
+                    </div>
+
+                    <!-- 红茶 -->
+                    <div class="category-card" data-category-id="black">
+                        <div class="h-40 bg-[#f0ece6] flex items-center justify-center p-4">
+                            <i class="fa-solid fa-temperature-high text-5xl text-primary"></i>
+                        </div>
+                        <div class="p-4 text-center">
+                            <h3 class="text-xl font-bold text-text">红茶</h3>
+                            <p class="text-accent text-sm mt-1">4 种选择</p>
+                        </div>
+                    </div>
+
+                    <!-- 乌龙茶 -->
+                    <div class="category-card" data-category-id="oolong">
+                        <div class="h-40 bg-[#f0ece6] flex items-center justify-center p-4">
+                            <i class="fa-solid fa-wheat-awn text-5xl text-primary"></i>
+                        </div>
+                        <div class="p-4 text-center">
+                            <h3 class="text-xl font-bold text-text">乌龙茶</h3>
+                            <p class="text-accent text-sm mt-1">3 种选择</p>
+                        </div>
+                    </div>
+
+                    <!-- 花茶 -->
+                    <div class="category-card" data-category-id="flower">
+                        <div class="h-40 bg-[#f0ece6] flex items-center justify-center p-4">
+                            <i class="fa-solid fa-seedling text-5xl text-primary"></i>
+                        </div>
+                        <div class="p-4 text-center">
+                            <h3 class="text-xl font-bold text-text">花茶</h3>
+                            <p class="text-accent text-sm mt-1">3 种选择</p>
+                        </div>
+                    </div>
+
+                    <!-- 黑茶 -->
+                    <div class="category-card" data-category-id="dark">
+                        <div class="h-40 bg-[#f0ece6] flex items-center justify-center p-4">
+                            <i class="fa-solid fa-mug-saucer text-5xl text-primary"></i>
+                        </div>
+                        <div class="p-4 text-center">
+                            <h3 class="text-xl font-bold text-text">黑茶</h3>
+                            <p class="text-accent text-sm mt-1">2 种选择</p>
+                        </div>
+                    </div>
+
+                    <!-- 养生茶 -->
+                    <div class="category-card" data-category-id="health">
+                        <div class="h-40 bg-[#f0ece6] flex items-center justify-center p-4">
+                            <i class="fa-solid fa-heartbeat text-5xl text-primary"></i>
+                        </div>
+                        <div class="p-4 text-center">
+                            <h3 class="text-xl font-bold text-text">养生茶</h3>
+                            <p class="text-accent text-sm mt-1">8 种选择</p>
+                        </div>
+                    </div>
+
+                    <!-- 包间收费 -->
+                    <div class="category-card" data-category-id="private-room">
+                        <div class="h-40 bg-[#f0ece6] flex items-center justify-center p-4">
+                            <i class="fa-solid fa-door-open text-5xl text-primary"></i>
+                        </div>
+                        <div class="p-4 text-center">
+                            <h3 class="text-xl font-bold text-text">包间收费</h3>
+                            <p class="text-accent text-sm mt-1">4 种选择</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 产品详情页面 -->
+        <div id="product-detail-page" class="page min-h-screen bg-background text-text">
+            <!-- 返回分类页按钮 -->
+            <div class="absolute top-4 left-4 z-10">
+                <button id="back-to-category-btn" class="back-button">
+                    <i class="fa-solid fa-arrow-left text-xl"></i>
+                </button>
+            </div>
+
+            <!-- 分类标题 -->
+            <div class="text-center py-6 content-center">
+                <h1 id="detail-category-name" class="text-2xl font-bold text-primary">茶品详情</h1>
+            </div>
+
+            <!-- 主内容区域 -->
+            <div class="container pb-24">
+                <div class="product-detail-layout">
+                    <!-- 左侧垂直快捷导航栏 - 确保在所有屏幕尺寸下都在左侧 -->
+                    <div class="quick-nav-wrapper">
+                        <div id="quick-nav-container">
+                            <!-- 快捷导航栏内容会通过JS动态生成 -->
+                        </div>
+                    </div>
+
+                    <!-- 茶品列表 - 网格布局 -->
+                    <div class="flex-1">
+                        <div id="product-list" class="product-grid">
+                            <!-- 产品列表会通过JS动态生成 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 菜单数据 - 添加了功效、配料和产地信息
+        const menuData = {
+            'cold-brew': {
+                name: '冷萃茶饮',
+                items: [
+                    { 
+                        id: '1', 
+                        name: '白桃乌龙', 
+                        price: '48元/壶', 
+                        memberPrice: '38元/壶', 
+                        note: '',
+                        description: '采用高山乌龙茶叶与新鲜白桃精心冷萃而成，口感清爽甘甜，带有淡淡的桃香与茶香，消暑解渴。',
+                        ingredients: '高山乌龙茶、白桃、纯净水',
+                        origin: '福建武夷山'
+                    },
+                    { 
+                        id: '2', 
+                        name: '黄芝香单枞', 
+                        price: '48元/壶', 
+                        memberPrice: '38元/壶', 
+                        note: '配2个杯，小吃、茶点一份',
+                        description: '精选凤凰山单枞茶，经过特殊工艺冷萃，香气高扬，滋味醇厚，回甘悠长。',
+                        ingredients: '凤凰单枞茶、纯净水',
+                        origin: '广东潮州'
+                    }
+                ]
+            },
+            'ice': {
+                name: '冰品类',
+                items: [
+                    { 
+                        id: '3', 
+                        name: '冰柠檬红茶', 
+                        price: '25元/杯', 
+                        memberPrice: '20元/杯', 
+                        note: '',
+                        description: '精选红茶搭配新鲜柠檬汁，酸甜可口，消暑解渴，富含维生素C。',
+                        ingredients: '红茶、新鲜柠檬、冰糖、纯净水',
+                        origin: '云南'
+                    },
+                    { 
+                        id: '4', 
+                        name: '鲜榨果汁', 
+                        price: '25元/杯', 
+                        memberPrice: '20元/杯', 
+                        note: '',
+                        description: '每日新鲜水果现榨，保留水果原始营养，无添加任何防腐剂和色素。',
+                        ingredients: '当季新鲜水果、纯净水',
+                        origin: '本地果园'
+                    },
+                    { 
+                        id: '5', 
+                        name: '百香果汁', 
+                        price: '25元/杯', 
+                        memberPrice: '20元/杯', 
+                        note: '',
+                        description: '采用新鲜百香果现榨，酸甜开胃，富含维生素和膳食纤维。',
+                        ingredients: '新鲜百香果、蜂蜜、纯净水',
+                        origin: '广西'
+                    },
+                    { 
+                        id: '6', 
+                        name: '金桔柠檬汁', 
+                        price: '25元/杯', 
+                        memberPrice: '20元/杯', 
+                        note: '',
+                        description: '金桔与柠檬的完美结合，酸甜爽口，具有清热润肺的功效。',
+                        ingredients: '金桔、柠檬、冰糖、纯净水',
+                        origin: '福建'
+                    },
+                    { 
+                        id: '7', 
+                        name: '冷泡栀子绿茶', 
+                        price: '25元/杯', 
+                        memberPrice: '20元/杯', 
+                        note: '',
+                        description: '采用低温冷泡工艺，保留绿茶的清香和营养，加入栀子花增添花香。',
+                        ingredients: '绿茶、栀子花、纯净水',
+                        origin: '浙江杭州'
+                    }
+                ]
+            },
+            'coffee': {
+                name: '咖啡',
+                items: [
+                    { 
+                        id: '8', 
+                        name: '南山咖啡', 
+                        price: '25元/杯', 
+                        memberPrice: '20元/杯', 
+                        note: '',
+                        description: '精选南山咖啡豆现磨现煮，口感醇厚，香气浓郁。',
+                        ingredients: '南山咖啡豆、纯净水',
+                        origin: '云南保山'
+                    },
+                    { 
+                        id: '9', 
+                        name: '拿铁', 
+                        price: '25元/杯', 
+                        memberPrice: '20元/杯', 
+                        note: '',
+                        description: '浓缩咖啡与新鲜牛奶的经典搭配，口感丝滑，咖啡香与奶香完美融合。',
+                        ingredients: '咖啡豆、新鲜牛奶',
+                        origin: '云南'
+                    },
+                    { 
+                        id: '10', 
+                        name: '冰咖啡', 
+                        price: '25元/杯', 
+                        memberPrice: '20元/杯', 
+                        note: '',
+                        description: '浓缩咖啡加冰块，口感清爽，提神醒脑。',
+                        ingredients: '咖啡豆、纯净水、冰块',
+                        origin: '云南'
+                    }
+                ]
+            },
+            'kungfu': {
+                name: '功夫茶',
+                items: [
+                    { 
+                        id: '11', 
+                        name: '128元/泡', 
+                        price: '凤凰单枞、大红袍任选一', 
+                        memberPrice: '', 
+                        note: '',
+                        description: '顶级功夫茶体验，专业茶艺师为您冲泡，感受传统茶文化的魅力。',
+                        ingredients: '精选茶叶、山泉水',
+                        origin: '福建武夷山'
+                    },
+                    { 
+                        id: '12', 
+                        name: '88元/泡', 
+                        price: '红茶、普洱、铁观音任选一', 
+                        memberPrice: '', 
+                        note: '',
+                        description: '经典功夫茶组合，口感醇厚，香气四溢，适合品茗聊天。',
+                        ingredients: '精选茶叶、山泉水',
+                        origin: '福建'
+                    }
+                ]
+            },
+            'green': {
+                name: '绿茶',
+                items: [
+                    { 
+                        id: '13', 
+                        name: '西湖龙井', 
+                        price: '25元/杯', 
+                        memberPrice: '20元/杯', 
+                        note: '',
+                        description: '中国十大名茶之一，色泽翠绿，香气清高，滋味鲜爽，具有提神醒脑、降脂减肥的功效。',
+                        ingredients: '西湖龙井茶叶、山泉水',
+                        origin: '浙江杭州西湖'
+                    },
+                    { 
+                        id: '14', 
+                        name: '碧螺春', 
+                        price: '25元/杯', 
+                        memberPrice: '20元/杯', 
+                        note: '',
+                        description: '条索纤细，卷曲成螺，白毫毕露，香气高雅，滋味鲜爽，具有清热解毒、消食化积的功效。',
+                        ingredients: '碧螺春茶叶、山泉水',
+                        origin: '江苏苏州太湖'
+                    },
+                    { 
+                        id: '15', 
+                        name: '极品竹叶青', 
+                        price: '20元/杯', 
+                        memberPrice: '15元/杯', 
+                        note: '',
+                        description: '外形扁平光滑，色泽翠绿，香气高爽，滋味鲜醇，具有清热除烦、生津止渴的功效。',
+                        ingredients: '竹叶青茶叶、山泉水',
+                        origin: '四川峨眉山'
+                    },
+                    { 
+                        id: '16', 
+                        name: '青茶', 
+                        price: '10元/杯', 
+                        memberPrice: '', 
+                        note: '',
+                        description: '口感清爽，香气淡雅，适合日常饮用，具有解渴消暑的功效。',
+                        ingredients: '青茶茶叶、山泉水',
+                        origin: '福建'
+                    }
+                ]
+            },
+            'black': {
+                name: '红茶',
+                items: [
+                    { 
+                        id: '17', 
+                        name: '金骏眉', 
+                        price: '38元/杯', 
+                        memberPrice: '30元/杯', 
+                        note: '',
+                        description: '红茶中的珍品，条索紧细，金毫显露，香气鲜甜，滋味醇厚，具有暖胃驱寒、提神醒脑的功效。',
+                        ingredients: '金骏眉茶叶、山泉水',
+                        origin: '福建武夷山'
+                    },
+                    { 
+                        id: '18', 
+                        name: '正山小种', 
+                        price: '25元/杯', 
+                        memberPrice: '20元/杯', 
+                        note: '',
+                        description: '世界红茶的鼻祖，色泽乌黑油润，香气高长，滋味醇厚，具有暖胃、提神、消除疲劳的功效。',
+                        ingredients: '正山小种茶叶、山泉水',
+                        origin: '福建武夷山'
+                    },
+                    { 
+                        id: '19', 
+                        name: '茉莉红茶', 
+                        price: '30元/杯', 
+                        memberPrice: '25元/杯', 
+                        note: '',
+                        description: '红茶与茉莉花的完美结合，香气芬芳，滋味醇厚，具有理气开郁、辟秽和中的功效。',
+                        ingredients: '红茶、茉莉花、山泉水',
+                        origin: '福建'
+                    },
+                    { 
+                        id: '20', 
+                        name: '云南滇红', 
+                        price: '20元/杯', 
+                        memberPrice: '15元/杯', 
+                        note: '',
+                        description: '云南特产，条索肥壮，金毫显露，香气高醇，滋味浓厚，具有暖胃、明目、提神的功效。',
+                        ingredients: '滇红茶叶、山泉水',
+                        origin: '云南凤庆'
+                    }
+                ]
+            },
+            'oolong': {
+                name: '乌龙茶',
+                items: [
+                    { 
+                        id: '21', 
+                        name: '凤凰单枞', 
+                        price: '48元/杯', 
+                        memberPrice: '35元/杯', 
+                        note: '',
+                        description: '广东潮汕特产，香气高锐持久，滋味醇厚甘滑，具有提神益思、消除疲劳的功效。',
+                        ingredients: '凤凰单枞茶叶、山泉水',
+                        origin: '广东潮州凤凰山'
+                    },
+                    { 
+                        id: '22', 
+                        name: '大红袍', 
+                        price: '35元/杯', 
+                        memberPrice: '30元/杯', 
+                        note: '',
+                        description: '武夷岩茶之王，香气馥郁，滋味醇厚，岩韵明显，具有提神醒脑、降脂减肥的功效。',
+                        ingredients: '大红袍茶叶、山泉水',
+                        origin: '福建武夷山'
+                    },
+                    { 
+                        id: '23', 
+                        name: '铁观音', 
+                        price: '25元/杯', 
+                        memberPrice: '20元/杯', 
+                        note: '',
+                        description: '闽南乌龙茶代表，香气馥郁持久，滋味醇厚甘鲜，具有抗衰老、抗动脉硬化的功效。',
+                        ingredients: '铁观音茶叶、山泉水',
+                        origin: '福建安溪'
+                    }
+                ]
+            },
+            'flower': {
+                name: '花茶',
+                items: [
+                    { 
+                        id: '24', 
+                        name: '黄金飘雪', 
+                        price: '30元/杯', 
+                        memberPrice: '25元/杯', 
+                        note: '',
+                        description: '精选茉莉花与绿茶窨制而成，香气鲜灵持久，滋味鲜爽回甘，具有理气解郁、清肝明目功效。',
+                        ingredients: '茉莉花、绿茶、山泉水',
+                        origin: '四川峨眉山'
+                    },
+                    { 
+                        id: '25', 
+                        name: '极品飘雪', 
+                        price: '20元/杯', 
+                        memberPrice: '15元/杯', 
+                        note: '',
+                        description: '优质茉莉花茶，香气清高，滋味鲜爽，具有清热解毒、平肝明目的功效。',
+                        ingredients: '茉莉花、绿茶、山泉水',
+                        origin: '四川'
+                    },
+                    { 
+                        id: '26', 
+                        name: '手工花茶', 
+                        price: '10元/杯', 
+                        memberPrice: '', 
+                        note: '',
+                        description: '传统手工制作，花香浓郁，茶色清亮，具有美容养颜、舒缓情绪的功效。',
+                        ingredients: '各种鲜花、茶叶、山泉水',
+                        origin: '本地'
+                    }
+                ]
+            },
+            'dark': {
+                name: '黑茶',
+                items: [
+                    { 
+                        id: '27', 
+                        name: '普洱(生)', 
+                        price: '30元/杯', 
+                        memberPrice: '25元/杯', 
+                        note: '',
+                        description: '未经渥堆发酵的普洱茶，香气清香，滋味苦涩回甘，具有清热生津、消食化痰的功效。',
+                        ingredients: '普洱生茶、山泉水',
+                        origin: '云南西双版纳'
+                    },
+                    { 
+                        id: '28', 
+                        name: '普洱(熟)', 
+                        price: '20元/杯', 
+                        memberPrice: '15元/杯', 
+                        note: '',
+                        description: '经过渥堆发酵的普洱茶，香气陈香，滋味醇厚甘滑，具有暖胃、降脂、降压的功效。',
+                        ingredients: '普洱熟茶、山泉水',
+                        origin: '云南西双版纳'
+                    }
+                ]
+            },
+            'health': {
+                name: '养生茶',
+                items: [
+                    { 
+                        id: '29', 
+                        name: '金丝雪梨', 
+                        price: '20元/杯', 
+                        memberPrice: '15元/杯', 
+                        note: '',
+                        description: '冰糖与雪梨慢炖而成，清甜润肺，生津止渴，具有润肺止咳、清热降火的功效。',
+                        ingredients: '雪梨、冰糖、纯净水',
+                        origin: '河北赵县'
+                    },
+                    { 
+                        id: '30', 
+                        name: '红颜知己', 
+                        price: '20元/杯', 
+                        memberPrice: '15元/杯', 
+                        note: '',
+                        description: '红枣、枸杞、桂圆等食材精心熬制，香甜可口，具有补气养血、美容养颜的功效。',
+                        ingredients: '红枣、枸杞、桂圆、红糖、纯净水',
+                        origin: '山东'
+                    },
+                    { 
+                        id: '31', 
+                        name: '清凉润肺', 
+                        price: '20元/杯', 
+                        memberPrice: '15元/杯', 
+                        note: '',
+                        description: '薄荷、桑叶、菊花等清凉食材，口感清爽，具有清热解毒、润肺止咳的功效。',
+                        ingredients: '薄荷、桑叶、菊花、冰糖、纯净水',
+                        origin: '浙江'
+                    },
+                    { 
+                        id: '32', 
+                        name: '蜂蜜柚子(杯)', 
+                        price: '20元/杯', 
+                        memberPrice: '15元/杯', 
+                        note: '',
+                        description: '新鲜柚子与蜂蜜调制而成，酸甜可口，具有美容养颜、润肺止咳的功效。',
+                        ingredients: '柚子、蜂蜜、纯净水',
+                        origin: '福建平和'
+                    },
+                    { 
+                        id: '33', 
+                        name: '蜂蜜柚子(壶)', 
+                        price: '48元/壶', 
+                        memberPrice: '38元/壶', 
+                        note: '配2个杯，小吃、茶点一份',
+                        description: '新鲜柚子与蜂蜜慢炖而成，香气四溢，具有美容养颜、润肺止咳的功效。',
+                        ingredients: '柚子、蜂蜜、纯净水',
+                        origin: '福建平和'
+                    },
+                    { 
+                        id: '34', 
+                        name: '特级苦荞', 
+                        price: '10元/杯', 
+                        memberPrice: '', 
+                        note: '',
+                        description: '精选苦荞，香气独特，口感醇厚，具有降血压、降血糖、降血脂的功效。',
+                        ingredients: '苦荞、山泉水',
+                        origin: '四川凉山'
+                    },
+                    { 
+                        id: '35', 
+                        name: '柠檬水', 
+                        price: '10元/杯', 
+                        memberPrice: '', 
+                        note: '',
+                        description: '新鲜柠檬切片泡水，酸甜爽口，富含维生素C，具有美白养颜、增强免疫力的功效。',
+                        ingredients: '柠檬、冰糖、纯净水',
+                        origin: '云南'
+                    },
+                    { 
+                        id: '36', 
+                        name: '金银花', 
+                        price: '10元/杯', 
+                        memberPrice: '', 
+                        note: '',
+                        description: '金银花泡水，口感清甜，具有清热解毒、疏散风热的功效。',
+                        ingredients: '金银花、冰糖、纯净水',
+                        origin: '山东临沂'
+                    }
+                ]
+            },
+            'private-room': {
+                name: '包间收费',
+                items: [
+                    { 
+                        id: '37', 
+                        name: '小雅', 
+                        price: '68元/场', 
+                        memberPrice: '', 
+                        note: '配4杯茶（青茶、花茶、菊花、荞麦）',
+                        description: '温馨舒适的小包间，适合2-4人小聚，环境雅致，私密性好。',
+                        ingredients: '提供基础茶品',
+                        origin: '茶舍内部'
+                    },
+                    { 
+                        id: '38', 
+                        name: '大雅', 
+                        price: '88元/场', 
+                        memberPrice: '', 
+                        note: '配4杯茶（青茶、花茶、菊花、荞麦）',
+                        description: '宽敞明亮的中包间，适合4-6人聚会，装修精美，环境幽静。',
+                        ingredients: '提供基础茶品',
+                        origin: '茶舍内部'
+                    },
+                    { 
+                        id: '39', 
+                        name: '豪包', 
+                        price: '138元/场', 
+                        memberPrice: '', 
+                        note: '配4杯茶（青茶、花茶、菊花、荞麦）',
+                        description: '豪华大气的大包间，适合6-10人聚会，配备高级茶桌和舒适座椅。',
+                        ingredients: '提供基础茶品',
+                        origin: '茶舍内部'
+                    },
+                    { 
+                        id: '40', 
+                        name: '附加费用', 
+                        price: '空调/烤火加10元', 
+                        memberPrice: '', 
+                        note: '超时按20元/小时计；晚上12点半以后按30元/小时计',
+                        description: '根据季节和使用时间收取的额外费用。',
+                        ingredients: '无',
+                        origin: '茶舍内部'
+                    }
+                ]
+            }
+        };
+
+        // 分类图标映射
+        const categoryIcons = {
+            'cold-brew': 'fa-wine-bottle',
+            'ice': 'fa-snowflake',
+            'coffee': 'fa-coffee',
+            'kungfu': 'fa-teapot',
+            'green': 'fa-leaf',
+            'black': 'fa-temperature-high',
+            'oolong': 'fa-wheat-awn',
+            'flower': 'fa-seedling',
+            'dark': 'fa-mug-saucer',
+            'health': 'fa-heartbeat',
+            'private-room': 'fa-door-open'
+        };
+
+        // 新品推荐轮播图数据
+        const banners = [
+            {
+                id: 1,
+                title: "新品推荐",
+                subtitle: "白桃乌龙 - 夏日清凉特饮",
+                imageUrl: "https://space.coze.cn/api/coze_space/gen_image?image_size=landscape_16_9&prompt=traditional%20Chinese%20tea%20ceremony%20with%20peach%20oolong%20tea%2C%20fresh%20peaches%2C%20serene%20atmosphere&sign=6d3bc2b2c6e8c1298d534aab3144da04"
+            },
+            {
+                id: 2,
+                title: "限时优惠",
+                subtitle: "养生茶系列 - 享受健康生活",
+                imageUrl: "https://space.coze.cn/api/coze_space/gen_image?image_size=landscape_16_9&prompt=chinese%20health%20tea%20set%20with%20various%20herbs%20and%20flowers%2C%20traditional%20ceramic%20tea%20ware&sign=059d55cb45981862ba4ed4e04bf3e616"
+            },
+            {
+                id: 3,
+                title: "季节特选",
+                subtitle: "冷泡栀子绿茶 - 清爽宜人",
+                imageUrl: "https://space.coze.cn/api/coze_space/gen_image?image_size=landscape_16_9&prompt=chinese%20green%20tea%20with%20gardenia%20flowers%20in%20traditional%20tea%20set%2C%20summer%20vibe&sign=ba67c9b7275b2ef902d197ce8a4ccc0d"
+            }
+        ];
+
+        // 页面切换管理器
+        const PageManager = {
+            currentPage: 'splash-screen',
+            pages: {},
+            
+            init: function() {
+                this.pages = {
+                    'splash-screen': document.getElementById('splash-screen'),
+                    'category-page': document.getElementById('category-page'),
+                    'product-detail-page': document.getElementById('product-detail-page')
+                };
+                
+                for (let pageId in this.pages) {
+                    if (pageId === this.currentPage) {
+                        this.pages[pageId].classList.add('active');
+                    } else {
+                        this.pages[pageId].classList.remove('active');
+                    }
+                }
+            },
+            
+            showPage: function(pageId) {
+                if (!this.pages[pageId]) return;
+                
+                if (pageId === 'splash-screen') {
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    document.body.style.overflow = 'auto';
+                }
+                
+                if (this.pages[this.currentPage]) {
+                    this.pages[this.currentPage].classList.remove('active');
+                }
+                
+                this.currentPage = pageId;
+                this.pages[pageId].classList.add('active');
+            }
+        };
+
+        // 生成茶品图片URL
+        function getTeaImageUrl(teaName) {
+            const imagePrompts = [
+                "https://space.coze.cn/api/coze_space/gen_image?image_size=square&prompt=Chinese%20tea%20ceremony%20with%20traditional%20tea%20set%20and%20green%20tea&sign=c9708caef902cbd10f9d93a5f0496f1f",
+                "https://space.coze.cn/api/coze_space/gen_image?image_size=square&prompt=Traditional%20Chinese%20tea%20cup%20with%20tea%20leaves%20in%20ceramic%20pot&sign=5bab22ed61b072ff7b31962dc888e453",
+                "https://space.coze.cn/api/coze_space/gen_image?image_size=square&prompt=Premium%20Chinese%20tea%20in%20traditional%20porcelain%20tea%20set&sign=e2c54ee9e0e6edaeeda6ae1cef6c9ff7",
+                "https://space.coze.cn/api/coze_space/gen_image?image_size=square&prompt=Chinese%20tea%20culture%20with%20tea%20cups%20and%20teapot%20on%20wooden%20table&sign=55995b6b8eb6318f3dea2eb048c77f76"
+            ];
+            
+            let hash = 0;
+            for (let i = 0; i < teaName.length; i++) {
+                hash = teaName.charCodeAt(i) + ((hash << 5) - hash);
+                hash = hash & hash;
+            }
+            
+            return imagePrompts[Math.abs(hash) % imagePrompts.length];
+        }
+
+        // 加载产品列表
+        function loadProducts(categoryId) {
+            const category = menuData[categoryId];
+            if (!category) return;
+            
+            document.getElementById('detail-category-name').textContent = category.name;
+            
+            updateNavigationHighlight(categoryId);
+            
+            const productList = document.getElementById('product-list');
+            productList.innerHTML = '';
+            
+            const isSpecialCategory = categoryId === 'kungfu' || categoryId === 'private-room';
+            
+            category.items.forEach((item, index) => {
+                const productCard = document.createElement('div');
+                productCard.className = 'product-card';
+                
+                productCard.style.opacity = '0';
+                productCard.style.transform = 'translateY(20px)';
+                productCard.style.transition = `opacity 0.5s ease, transform 0.5s ease`;
+                
+                productCard.innerHTML = `
+                    <div class="flex flex-col h-full">
+                        <div class="bg-[#f0ece6] rounded-t-xl overflow-hidden min-h-[200px] flex items-center justify-center">
+                            <img 
+                                src="${getTeaImageUrl(item.name)}" 
+                                alt="${item.name}"
+                                class="w-full h-full object-cover"
+                            />
+                        </div>
+                        
+                        <div class="p-4 flex-1 flex flex-col">
+                            <h3 class="text-lg font-bold text-text mb-3">${item.name}</h3>
+                            
+                            ${isSpecialCategory ? 
+                                `<div class="font-medium text-primary mb-2">
+                                    ${item.price}
+                                </div>` : 
+                                `<div class="flex items-end flex-wrap gap-2 mb-2">
+                                    ${item.memberPrice ? 
+                                        `<span class="bg-[#f0ece6] text-primary px-2 py-1 rounded-md font-medium">
+                                            会员: ${item.memberPrice}
+                                        </span>` : ''}
+                                    <span class="${item.memberPrice ? 'text-gray-500 line-through' : 'font-medium text-primary'}">
+                                        ${item.price}
+                                    </span>
+                                </div>`
+                            }
+                            
+                            ${item.note ? 
+                                `<p class="text-sm text-gray-600 italic mt-auto">
+                                    ${item.note}
+                                </p>` : ''
+                            }
+                        </div>
+                    </div>
+                `;
+                
+                productCard.addEventListener('click', () => {
+                    openProductDetailModal(item, category.name);
+                });
+                
+                productList.appendChild(productCard);
+                
+                setTimeout(() => {
+                    productCard.style.opacity = '1';
+                    productCard.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+            
+            function openProductDetailModal(item, categoryName) {
+                const modal = document.createElement('div');
+                modal.className = 'modal-overlay';
+                
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-4">
+                                <h3 class="text-xl font-bold text-text">${item.name}</h3>
+                                <button id="close-detail-modal" class="text-gray-500 hover:text-gray-700">
+                                    <i class="fa-solid fa-times text-xl"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="mb-6 bg-[#f0ece6] rounded-lg overflow-hidden">
+                                <img 
+                                    src="${getTeaImageUrl(item.name)}" 
+                                    alt="${item.name}"
+                                    class="w-full h-64 object-cover"
+                                />
+                            </div>
+                            
+                            <div class="mb-4">
+                                ${isSpecialCategory ? 
+                                    `<div class="font-medium text-primary text-lg">
+                                        ${item.price}
+                                    </div>` : 
+                                    `<div class="flex items-end flex-wrap gap-2">
+                                        ${item.memberPrice ? 
+                                            `<span class="bg-[#f0ece6] text-primary px-3 py-1.5 rounded-md font-medium">
+                                                会员: ${item.memberPrice}
+                                            </span>` : ''}
+                                        <span class="${item.memberPrice ? 'text-gray-500 line-through' : 'font-medium text-primary text-lg'}">
+                                            ${item.price}
+                                        </span>
+                                    </div>`
+                                }
+                            </div>
+                            
+                            ${item.note ? 
+                                `<div class="mb-4">
+                                    <h4 class="font-medium text-text mb-2">备注：</h4>
+                                    <p class="text-gray-600">${item.note}</p>
+                                </div>` : ''
+                            }
+                            
+                            ${item.description ? 
+                                `<div class="mb-4">
+                                    <h4 class="font-medium text-text mb-2">功效：</h4>
+                                    <p class="text-gray-600">${item.description}</p>
+                                </div>` : ''
+                            }
+                            
+                            ${item.ingredients ? 
+                                `<div class="mb-4">
+                                    <h4 class="font-medium text-text mb-2">配料：</h4>
+                                    <p class="text-gray-600">${item.ingredients}</p>
+                                </div>` : ''
+                            }
+                            
+                            ${item.origin ? 
+                                `<div class="mb-4">
+                                    <h4 class="font-medium text-text mb-2">产地：</h4>
+                                    <p class="text-gray-600">${item.origin}</p>
+                                </div>` : ''
+                            }
+                            
+                            <div class="flex justify-end mt-6">
+                                <button id="close-modal-btn" class="primary-button">
+                                    关闭
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                
+                const closeModal = () => {
+                    modal.style.animation = 'fadeOut 0.3s forwards';
+                    modal.querySelector('.modal-content').style.animation = 'zoomOut 0.3s forwards';
+                    setTimeout(() => {
+                        document.body.removeChild(modal);
+                    }, 300);
+                };
+                
+                document.getElementById('close-detail-modal').addEventListener('click', closeModal);
+                document.getElementById('close-modal-btn').addEventListener('click', closeModal);
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        closeModal();
+                    }
+                });
+                
+                document.addEventListener('keydown', function handleEsc(e) {
+                    if (e.key === 'Escape') {
+                        closeModal();
+                        document.removeEventListener('keydown', handleEsc);
+                    }
+                });
+            }
+        }
+
+        // 初始化轮播图
+        function initBannerSlider() {
+            const slider = document.getElementById('banner-slider');
+            const prevBtn = document.getElementById('prev-banner');
+            const nextBtn = document.getElementById('next-banner');
+            const indicators = document.getElementById('banner-indicators');
+            let currentBanner = 0;
+            
+            banners.forEach(banner => {
+                const slide = document.createElement('div');
+                slide.className = 'banner-slide';
+                slide.innerHTML = `
+                    <img 
+                        src="${banner.imageUrl}" 
+                        alt="${banner.title}" 
+                        class="w-full h-full object-cover"
+                    />
+                    <div class="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex flex-col justify-center p-6 md:p-10">
+                        <h3 class="text-white text-2xl md:text-3xl font-bold mb-2">${banner.title}</h3>
+                        <p class="text-white text-lg md:text-xl opacity-90">${banner.subtitle}</p>
+                    </div>
+                `;
+                slider.appendChild(slide);
+            });
+            
+            banners.forEach((_, index) => {
+                const indicator = document.createElement('button');
+                indicator.className = `banner-indicator ${index === currentBanner ? 'active' : ''}`;
+                indicator.ariaLabel = `切换到轮播图 ${index + 1}`;
+                indicator.addEventListener('click', () => {
+                    currentBanner = index;
+                    updateSlider();
+                });
+                indicators.appendChild(indicator);
+            });
+            
+            const nextBanner = () => {
+                currentBanner = (currentBanner + 1) % banners.length;
+                updateSlider();
+            };
+            
+            const prevBanner = () => {
+                currentBanner = (currentBanner - 1 + banners.length) % banners.length;
+                updateSlider();
+            };
+            
+            const updateSlider = () => {
+                slider.style.transform = `translateX(-${currentBanner * 100}%)`;
+                
+                const indicatorButtons = indicators.querySelectorAll('button');
+                indicatorButtons.forEach((btn, index) => {
+                    if (index === currentBanner) {
+                        btn.className = 'banner-indicator active';
+                    } else {
+                        btn.className = 'banner-indicator';
+                    }
+                });
+            };
+            
+            prevBtn.addEventListener('click', prevBanner);
+            nextBtn.addEventListener('click', nextBanner);
+            
+            const interval = setInterval(nextBanner, 5000);
+            
+            return () => {
+                clearInterval(interval);
+            };
+        }
+
+        // 初始化快捷导航栏
+        function initQuickNav() {
+            const quickNavContainer = document.getElementById('quick-nav-container');
+            let isMobile = window.innerWidth < 768;
+            let isTablet = window.innerWidth >= 768 && window.innerWidth < 1024;
+            
+            const checkDeviceType = () => {
+                const newIsMobile = window.innerWidth < 768;
+                const newIsTablet = window.innerWidth >= 768 && window.innerWidth < 1024;
+                
+                if (newIsMobile !== isMobile || newIsTablet !== isTablet) {
+                    isMobile = newIsMobile;
+                    isTablet = newIsTablet;
+                    renderQuickNav();
+                }
+            };
+            
+            const renderQuickNav = () => {
+                quickNavContainer.innerHTML = '';
+                
+                if (isMobile) {
+                    const navDiv = document.createElement('div');
+                    navDiv.className = 'quick-nav-mobile';
+                    
+                    Object.keys(menuData).forEach(categoryId => {
+                        const category = menuData[categoryId];
+                        const btn = document.createElement('button');
+                        btn.className = 'quick-nav-btn';
+                        btn.dataset.categoryId = categoryId;
+                        btn.textContent = category.name;
+                        
+                        btn.addEventListener('click', () => {
+                            loadProducts(categoryId);
+                            
+                            document.querySelectorAll('.quick-nav-btn').forEach(b => {
+                                b.classList.remove('active');
+                            });
+                            btn.classList.add('active');
+                        });
+                        
+                        navDiv.appendChild(btn);
+                    });
+                    
+                    quickNavContainer.appendChild(navDiv);
+                } else {
+                    const navDiv = document.createElement('div');
+                    navDiv.className = 'quick-nav-desktop';
+                    
+                    Object.keys(menuData).forEach(categoryId => {
+                        const category = menuData[categoryId];
+                        const icon = categoryIcons[categoryId] || 'fa-coffee';
+                        const navItemHeightClass = isTablet ? 'py-4' : 'py-3';
+                        const btn = document.createElement('button');
+                        btn.className = `quick-nav-item ${navItemHeightClass}`;
+                        btn.dataset.categoryId = categoryId;
+                        btn.innerHTML = `<i class="fa-solid ${icon} mr-3 text-lg"></i><span>${category.name}</span>`;
+                        
+                        btn.addEventListener('click', () => {
+                            loadProducts(categoryId);
+                            
+                            navDiv.querySelectorAll('button').forEach(b => {
+                                b.classList.remove('active');
+                            });
+                            btn.classList.add('active');
+                        });
+                        
+                        navDiv.appendChild(btn);
+                    });
+                    
+                    quickNavContainer.appendChild(navDiv);
+                }
+            };
+            
+            renderQuickNav();
+            
+            window.addEventListener('resize', checkDeviceType);
+            
+            return () => {
+                window.removeEventListener('resize', checkDeviceType);
+            };
+        }
+         
+        function updateNavigationHighlight(categoryId) {
+            const mobileNavButtons = document.querySelectorAll('.quick-nav-btn');
+            mobileNavButtons.forEach(btn => {
+                if (btn.dataset.categoryId === categoryId) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            
+            const desktopNavButtons = document.querySelectorAll('#quick-nav-container button[data-category-id]');
+            desktopNavButtons.forEach(btn => {
+                if (btn.dataset.categoryId === categoryId) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        // 事件监听器
+        document.addEventListener('DOMContentLoaded', function() {
+            PageManager.init();
+            
+            const cleanupBanner = initBannerSlider();
+            const cleanupQuickNav = initQuickNav();
+            
+            document.getElementById('splash-screen').addEventListener('click', function() {
+                PageManager.showPage('category-page');
+            });
+            
+            document.getElementById('enter-menu-btn').addEventListener('click', function(e) {
+                e.stopPropagation();
+                PageManager.showPage('category-page');
+            });
+            
+            document.getElementById('back-to-splash-btn').addEventListener('click', function() {
+                PageManager.showPage('splash-screen');
+            });
+            
+            document.querySelectorAll('.category-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    const categoryId = this.dataset.categoryId;
+                    loadProducts(categoryId);
+                    PageManager.showPage('product-detail-page');
+                });
+            });
+            
+            document.getElementById('back-to-category-btn').addEventListener('click', function() {
+                PageManager.showPage('category-page');
+            });
+            
+            loadProducts('cold-brew');
+            
+            window.addEventListener('beforeunload', () => {
+                cleanupBanner();
+                cleanupQuickNav();
+            });
+        });
+    </script>
+</body>
+</html>
